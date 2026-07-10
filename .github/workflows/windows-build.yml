@@ -1,0 +1,56 @@
+name: Windows Build
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25.x'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.13.0
+
+      - name: Go tests
+        run: go test ./...
+
+      - name: Frontend install
+        working-directory: frontend
+        run: npm install
+
+      - name: Frontend build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Wails Windows build
+        run: >
+          wails build
+          -clean
+          -trimpath
+          -platform windows/amd64
+          -webview2 embed
+
+      - name: Upload portable EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: stegsolve-go-windows-amd64
+          path: |
+            build/bin/*.exe
+          if-no-files-found: error
