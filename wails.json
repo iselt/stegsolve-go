@@ -7,7 +7,7 @@
   "frontend:dev:watcher": "npm run dev",
   "frontend:dev:serverUrl": "auto",
   "author": {
-    "name": "",
+    "name": "iselt",
     "email": ""
   },
   "info": {
@@ -15,6 +15,6 @@
     "productName": "StegSolve Go",
     "productVersion": "0.1.0",
     "copyright": "",
-    "comments": "Bit plane viewer and LSB extractor for Windows"
+    "comments": "Cross-platform bit plane viewer and LSB extractor"
   }
 }
