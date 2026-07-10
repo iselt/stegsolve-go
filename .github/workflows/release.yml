@@ -123,22 +123,32 @@ jobs:
 
       - name: Build
         shell: bash
+        env:
+          WAILS_PLATFORM: ${{ matrix.wails_platform }}
+          WAILS_EXTRA: ${{ matrix.wails_extra_args }}
+          ASSET_NAME: ${{ matrix.asset_name }}
+          TARGET_OS: ${{ matrix.goos }}
         run: |
           set -euo pipefail
-          EXTRA=(${{ matrix.wails_extra_args }})
-          TAGS_ARGS=()
+          BUILD_CMD=(wails build -clean -trimpath -platform "${WAILS_PLATFORM}")
           if [[ -n "${WAILS_TAGS:-}" ]]; then
-            TAGS_ARGS=(-tags "${WAILS_TAGS}")
+            BUILD_CMD+=(-tags "${WAILS_TAGS}")
           fi
-          wails build -clean -trimpath -platform "${{ matrix.wails_platform }}" "${TAGS_ARGS[@]}" "${EXTRA[@]}"
+          # shellcheck disable=SC2206
+          if [[ -n "${WAILS_EXTRA}" ]]; then
+            EXTRA_ARR=(${WAILS_EXTRA})
+            BUILD_CMD+=("${EXTRA_ARR[@]}")
+          fi
+          printf 'Running:'; printf ' %q' "${BUILD_CMD[@]}"; echo
+          "${BUILD_CMD[@]}"
           mkdir -p dist
-          case "${{ matrix.goos }}" in
+          case "${TARGET_OS}" in
             windows)
               src="build/bin/stegsolve-go.exe"
               if [[ ! -f "$src" ]]; then
                 src="$(find build/bin -name '*.exe' -type f | head -n1)"
               fi
-              cp "$src" "dist/${{ matrix.asset_name }}"
+              cp "$src" "dist/${ASSET_NAME}"
               ;;
             darwin)
               app="build/bin/stegsolve-go.app"
@@ -147,7 +157,7 @@ jobs:
               fi
               (
                 cd "$(dirname "$app")"
-                zip -qry "$GITHUB_WORKSPACE/dist/${{ matrix.asset_name }}" "$(basename "$app")"
+                zip -qry "${GITHUB_WORKSPACE}/dist/${ASSET_NAME}" "$(basename "$app")"
               )
               ;;
             linux)
@@ -155,7 +165,7 @@ jobs:
               if [[ ! -f "$bin" ]]; then
                 bin="$(find build/bin -type f -perm -111 ! -name '*.so' | head -n1)"
               fi
-              tar -C "$(dirname "$bin")" -czf "dist/${{ matrix.asset_name }}" "$(basename "$bin")"
+              tar -C "$(dirname "$bin")" -czf "dist/${ASSET_NAME}" "$(basename "$bin")"
               ;;
           esac
           ls -lh dist/
