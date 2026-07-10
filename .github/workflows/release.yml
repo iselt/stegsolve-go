@@ -70,7 +70,8 @@ jobs:
             asset_name: stegsolve-go-windows-amd64.exe
             wails_extra_args: '-webview2 embed'
 
-          - os: macos-13
+          # Both macOS targets on macos-latest (arm64 host); Wails cross-compiles darwin/amd64.
+          - os: macos-latest
             goos: darwin
             goarch: amd64
             wails_platform: darwin/amd64
